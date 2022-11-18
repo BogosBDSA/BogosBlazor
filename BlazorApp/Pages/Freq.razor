@@ -2,6 +2,8 @@
 @using System.Text.Json
 @using System.Text.Json.Serialization
 @inject IHttpClientFactory ClientFactory
+@using BlazorApp
+
 
 <h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
 <PageTitle>Gitfrequency</PageTitle>
@@ -21,14 +23,20 @@ else
     private string result; 
     private bool geDatabaseError;
     private bool shouldRender;
+    private string author;
+    private string repo;
+
 
     protected override bool ShouldRender() => shouldRender;
 
     protected override async Task OnInitializedAsync()
     {
-        
+        author = BlazorApp.Pages.Index.authline;
+        repo = BlazorApp.Pages.Index.repoline;
+
+
         var request = new HttpRequestMessage(HttpMethod.Get,
-            "http://localhost:5243/frequency/nselpriv/BOGOS_BDSA");
+            $"http://localhost:5243/frequency/{author}/{repo}");
 
         var client = ClientFactory.CreateClient();
         var response = await client.SendAsync(request);
