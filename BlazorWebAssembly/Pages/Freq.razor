@@ -1,0 +1,41 @@
+@page "/freq"
+@using System.Net.Http
+@inject HttpClient Http
+
+
+
+<h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
+<PageTitle>Gitfrequency</PageTitle>
+
+@if (result == "")
+{
+    <p>Result was empty, maybe it doesn't exist?</p>
+}
+else
+{
+    <ul>
+        <li>@result</li>
+    </ul>
+    
+}
+
+@code {
+
+    private Dictionary<string, int> commits = new Dictionary<string, int>();
+    private string result = "";
+
+
+    protected override async Task OnInitializedAsync()
+    { 
+        var author = Index.authline;
+        var repo = Index.repoline;
+       //commits = await Http.GetFromJsonAsync<Dictionary<string, int>>("http://localhost:5243/frequency/nselpriv/Bogos_BDSA");
+        result = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
+    }
+    
+            
+   private class FrequencyData
+   {
+        Dictionary<string, int> dateToFreq;
+   }
+}
