@@ -1,0 +1,45 @@
+@page "/freq"
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Net.Http
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using BlazorWebAssembly
+@using System.Collections.Immutable
+
+
+
+<h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
+<PageTitle>Gitfrequency</PageTitle>
+
+@if (commits == null)
+{
+    <p>Unable to get result from database Please try again later.</p>
+}
+else
+{
+    <ul>
+        
+         @foreach (var item in commits.Keys)
+        {
+            <li>@commits[item]</li>
+        }
+    </ul>
+    
+}
+
+@code {
+
+    private Dictionary<string, int> commits = new Dictionary<string, int>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+       commits = await Http.GetFromJsonAsync<Dictionary<string, int>>("http://localhost:5243/frequency/nselpriv/Bogos_BDSA");
+
+    
+    }
+    
+            
+   
+}

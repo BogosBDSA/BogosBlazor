@@ -1,0 +1,58 @@
+@page "/auth"
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject HttpClient ClientFactory
+
+<h1>Call web API from a Blazor Server Razor GitAuthor</h1>
+<PageTitle>GitAuthor</PageTitle>
+
+@if (geDatabaseError)
+{
+    <p>Unable to get result from database Please try again later.</p>
+}
+else
+{
+    <ul>
+        <p>@result</p>
+    </ul>
+}
+
+@code {
+    private string result; 
+    private bool geDatabaseError;
+    private bool shouldRender;
+     private string author;
+    private string repo;
+
+    protected override bool ShouldRender() => shouldRender;
+
+    protected override async Task OnInitializedAsync()
+    {
+        author = BlazorWebAssembly.Pages.Index.authline;
+        repo = BlazorWebAssembly.Pages.Index.repoline;
+        
+        var request = new HttpRequestMessage(HttpMethod.Get,
+            $"http://localhost:5243/author/{author}/{repo}");
+
+      
+        var response = await ClientFactory.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            var temp = await JsonSerializer.DeserializeAsync<object>(responseStream);
+            
+            result= await response.Content.ReadAsStringAsync();
+        
+        }
+        else
+        {
+         
+           geDatabaseError = true;
+        }
+
+        shouldRender = true;
+    }
+
+   
+}
