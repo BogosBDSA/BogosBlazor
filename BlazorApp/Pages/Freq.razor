@@ -3,6 +3,7 @@
 @using System.Text.Json.Serialization
 @inject IHttpClientFactory ClientFactory
 @using BlazorApp
+@using System.Collections.Immutable
 
 
 <h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
@@ -16,7 +17,13 @@ else
 {
     <ul>
         <p>@result</p>
+      @*   @foreach (var commit in commits)
+        {
+            <li>@commit.date</li>
+
+        } *@
     </ul>
+    
 }
 
 @code {
@@ -25,7 +32,7 @@ else
     private bool shouldRender;
     private string author;
     private string repo;
-
+   // private Dictionary<string, int> commits = ImmutableDictionary.Create<string,int>();
 
     protected override bool ShouldRender() => shouldRender;
 
@@ -44,7 +51,10 @@ else
         if (response.IsSuccessStatusCode)
         {
             using var responseStream = await response.Content.ReadAsStreamAsync();
-            var temp = await JsonSerializer.DeserializeAsync<object>(responseStream);
+            //var commit = await JsonSerializer.DeserializeAsync<>(responseStream);
+
+            @* var  = await Newtonsoft.Json.JsonConvert.DeserializeObject<Frequency>(responseStream);
+ *@
             
             result= await response.Content.ReadAsStringAsync();
         
@@ -57,6 +67,12 @@ else
 
         shouldRender = true;
     }
+
+   @*  public class Frequency
+    {
+        DateToFrequency = new Dictionary<string, int>();
+
+    } *@
 
    
 }
