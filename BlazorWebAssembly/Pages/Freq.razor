@@ -8,6 +8,12 @@
 <h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
 <PageTitle>Gitfrequency</PageTitle>
 
+@if (repo == null || author == null)
+{
+    <p>Invalid input</p>
+}
+
+
 @if (result == null)
 {
     <p>Loading...</p>
@@ -15,30 +21,26 @@
 else
 {
     <ul>
-        @foreach (var date in result.dateToFrequencyDict.Keys)
+        @foreach (var date in result.Keys)
         {
-            <li>@($"{date} - {result.dateToFrequencyDict[date].ToString()}")</li>
+            <li>@($"{date} - {result[date].ToString()}")</li>
         }
     </ul>
 
 }
 
 @code {
-    private DateToFrequency result;
+    private Dictionary<string,int> result;
 
+    private string? author,repo;
 
     protected override async Task OnInitializedAsync()
     {
-        var author = Index.authline;
-        var repo = Index.repoline;
+        author = Index.authline;
+        repo = Index.repoline;
         var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
-        result = JsonConvert.DeserializeObject<DateToFrequency>(jsonToConvert);
+        result = JsonConvert.DeserializeObject<Dictionary<string,int>>(jsonToConvert);
     }
 
-
-    public class DateToFrequency
-    {
-        public Dictionary<string, int> dateToFrequencyDict { get; set; }
-    }
 
 }
