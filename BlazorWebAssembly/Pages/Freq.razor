@@ -1,5 +1,6 @@
 @page "/freq"
 @using System.Net.Http
+@using Newtonsoft.Json
 @inject HttpClient Http
 
 
@@ -7,35 +8,37 @@
 <h1>Call web API from a Blazor Server Razor Gitfrequency</h1>
 <PageTitle>Gitfrequency</PageTitle>
 
-@if (result == "")
+@if (result == null)
 {
-    <p>Result was empty, maybe it doesn't exist?</p>
+    <p>Loading...</p>
 }
 else
 {
     <ul>
-        <li>@result</li>
+        @foreach (var date in result.DateToFrequency.Keys)
+        {
+            <li>@($"{date} - {result.DateToFrequency[date].ToString()}")</li>
+        }
     </ul>
-    
+
 }
 
 @code {
-
-    private Dictionary<string, int> commits = new Dictionary<string, int>();
-    private string result = "";
+    private FrequencyData result;
 
 
     protected override async Task OnInitializedAsync()
-    { 
+    {
         var author = Index.authline;
         var repo = Index.repoline;
-       //commits = await Http.GetFromJsonAsync<Dictionary<string, int>>("http://localhost:5243/frequency/nselpriv/Bogos_BDSA");
-        result = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
+        var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
+        result = JsonConvert.DeserializeObject<FrequencyData>(jsonToConvert);
     }
-    
-            
-   private class FrequencyData
-   {
-        Dictionary<string, int> dateToFreq;
-   }
+
+
+    public class FrequencyData
+    {
+        public Dictionary<string, int> DateToFrequency { get; set; }
+    }
+
 }
