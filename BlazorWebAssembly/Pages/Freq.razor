@@ -15,16 +15,16 @@
 else
 {
     <ul>
-        @foreach (var date in result.DateToFrequency.Keys)
+        @foreach (var date in result.dateToFrequencyDict.Keys)
         {
-            <li>@($"{date} - {result.DateToFrequency[date].ToString()}")</li>
+            <li>@($"{date} - {result.dateToFrequencyDict[date].ToString()}")</li>
         }
     </ul>
 
 }
 
 @code {
-    private FrequencyData result;
+    private DateToFrequency result;
 
 
     protected override async Task OnInitializedAsync()
@@ -32,13 +32,13 @@ else
         var author = Index.authline;
         var repo = Index.repoline;
         var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
-        result = JsonConvert.DeserializeObject<FrequencyData>(jsonToConvert);
+        result = JsonConvert.DeserializeObject<DateToFrequency>(jsonToConvert);
     }
 
 
-    public class FrequencyData
+    public class DateToFrequency
     {
-        public Dictionary<string, int> DateToFrequency { get; set; }
+        public Dictionary<string, int> dateToFrequencyDict { get; set; }
     }
 
 }

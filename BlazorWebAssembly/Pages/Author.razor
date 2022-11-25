@@ -1,0 +1,47 @@
+@page "/author"
+@using System.Net.Http
+@using Newtonsoft.Json
+@inject HttpClient Http
+
+<h1>Call web API from a Blazor Server Razor GitAuthor</h1>
+<PageTitle>GitAuthor</PageTitle>
+
+@if (result == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    @foreach (var Author in result.AuthorToFreq!.Keys)
+    {
+        <h3>@Author</h3>
+        <ul>
+            @foreach (var DateToFreq in result.AuthorToFreq[Author].dateToFrequencyDict)
+            {
+                <li>@($"{DateToFreq.Key} {DateToFreq.Value}")</li>
+            }
+
+        </ul>
+
+    }
+}
+
+@code {
+
+
+    private AuthorData? result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var author = Index.authline;
+        var repo = Index.repoline;
+        var jsonToConvert = await Http.GetStringAsync("http://localhost:5243/author/SDeLaVida/assignment-01");
+        result = JsonConvert.DeserializeObject<AuthorData>(jsonToConvert);
+    }
+
+    public class AuthorData
+    {
+        public Dictionary<string, Freq.DateToFrequency> AuthorToFreq { get; set; }
+    }
+
+}
