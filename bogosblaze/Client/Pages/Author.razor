@@ -1,0 +1,54 @@
+@page "/author"
+@using System.Net.Http
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+
+<h1>Call web API from a Blazor Server Razor GitAuthor</h1>
+<PageTitle>GitAuthor</PageTitle>
+
+@if (repo == null || author == null)
+{
+    <p>Invalid input</p>
+} else if (result == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    @foreach (var Author in result.Keys)
+    {
+        <h3>@Author</h3>
+        <ul>
+            @foreach (var DateToFreq in result[Author])
+            {
+                <li>@($"{DateToFreq.Key} - {DateToFreq.Value}")</li>
+            }
+
+        </ul>
+
+    }
+}
+
+@code {
+    private Dictionary<string,Dictionary<string,int>>? result;
+    private string? author,repo;
+
+    protected override async Task OnInitializedAsync()
+    {
+         try
+        {
+        author = Index.authline;
+        repo = Index.repoline;
+        var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/author/{author}/{repo}");
+        result = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string,int>>>(jsonToConvert);
+        }
+            catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+}

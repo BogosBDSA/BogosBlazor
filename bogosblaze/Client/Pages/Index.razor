@@ -1,9 +1,41 @@
 ﻿@page "/"
 
+
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Hello, check your repo here!</h1>
 
-Welcome to your new app.
+  <label for="fname">Repo name:</label>
+  <input @bind="repoline" type="text" id="repoline" name="repoline"><br><br>
+  <label for="lname">Owner name:</label>
+  <input @bind="authline" type="text" id="authline" name="authline"><br><br>
+  <button @onclick="Update">Submit</button>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+ 
+
+@code {
+
+  
+  
+
+  
+
+  public static string authline {get;set;}
+  public static string repoline {get;set;} 
+
+  public void Update(){
+    authline=findauthor();
+    repoline=findrepo();
+  }
+
+  public string findrepo()
+  {
+    return repoline; 
+  }
+  public string findauthor(){
+    return authline ;
+  }
+  
+
+}
+

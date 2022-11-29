@@ -1,0 +1,119 @@
+@page "/freq"
+@using System.Net.Http
+@using Newtonsoft.Json
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+
+
+
+<RadzenText TextStyle="TextStyle.H3" TagName="TagName.H1" Class="my-4">
+    Radzen Blazor Chart with line series
+</RadzenText>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 my-5">
+            <RadzenCard Class="w-100 mb-4" Style="display: flex; align-items: center; gap: 0.5rem">
+                <RadzenCheckBox @bind-Value="@smooth" Name="smooth"></RadzenCheckBox>
+                <RadzenLabel Text="Smooth" For="smooth" Style="margin-right: 1rem;" />
+                <RadzenCheckBox @bind-Value="@showDataLabels" Name="dataLabels"></RadzenCheckBox>
+                <RadzenLabel Text="Show Data Labels" For="dataLabels" />
+            </RadzenCard>
+            <RadzenChart>
+                <RadzenLineSeries Smooth="@smooth" Data="@frequency" CategoryProperty="Date" Title="@author"
+                    ValueProperty="Commits">
+                    <RadzenMarkers MarkerType="MarkerType.Square" />
+                    <RadzenSeriesDataLabels Visible="@showDataLabels" />
+                </RadzenLineSeries>
+
+                <RadzenCategoryAxis Formatter="@FormatAsMonth">
+                    <RadzenTicks>
+                        <Template>
+                            <text class="rz-tick-text"
+                                style="text-anchor: start; transform: translate(@(Math.Truncate(context.X))px, @(Math.Truncate(context.Y + 10))px) rotate(45deg)">@context.Value</text>
+                        </Template>
+                    </RadzenTicks>
+                </RadzenCategoryAxis>
+                <RadzenValueAxis Min="0" Max="@(maxValue + 5)" Step="5">
+                    <RadzenGridLines Visible="true" />
+                    <RadzenAxisTitle Text="Commits pr. day" />
+                </RadzenValueAxis>
+            </RadzenChart>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rz-chart svg {
+        overflow: visible;
+    }
+</style>
+
+@code {
+    bool smooth = true;
+    bool showDataLabels = false;
+
+    int maxValue = 100;
+    private List<DataItem> frequency;
+
+    private string? author, repo;
+
+    protected override async Task OnInitializedAsync()
+    {
+         try
+        {
+        author = Index.authline;
+        repo = Index.repoline;
+        var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/frequency/{author}/{repo}");
+        var result = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonToConvert);
+        frequency = new();
+        foreach (var item in result.Reverse())
+        {
+
+            frequency.Add(new DataItem()
+            {
+                Date = item.Key,
+                Commits = item.Value
+            });
+        }
+
+        maxValue = frequency.Select(c => c.Commits).Max();
+
+         }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+
+    string FormatAsMonth(object value)
+    {
+        if (value != null)
+        {
+            DateTime hello;
+            DateTime.TryParseExact(value.ToString(), "dd-MM-yyyy", null,
+            DateTimeStyles.None, out hello);
+            return hello.ToString("dd-MM-yyyy");
+        }
+
+        return string.Empty;
+    }
+
+
+    public class DataItem
+    {
+        public string? Date { get; set; }
+        public int Commits { get; set; }
+    }
+
+
+
+
+
+
+
+}
