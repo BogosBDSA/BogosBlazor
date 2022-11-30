@@ -12,43 +12,125 @@
 @if (repo == null || author == null)
 {
     <p>Invalid input</p>
-} else if (result == null)
+}
+else if (noResponse)
 {
     <p>Loading...</p>
 }
 else
 {
-    @foreach (var Author in result.Keys)
-    {
-        <h3>@Author</h3>
-        <ul>
-            @foreach (var DateToFreq in result[Author])
-            {
-                <li>@($"{DateToFreq.Key} - {DateToFreq.Value}")</li>
-            }
+    <RadzenText TextStyle="TextStyle.H3" TagName="TagName.H1" Class="my-4">
+        Radzen Blazor Chart with line series
+    </RadzenText>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 my-5">
+                <RadzenCard Class="w-100 mb-4" Style="display: flex; align-items: center; gap: 0.5rem">
+                    <RadzenCheckBox @bind-Value="@smooth" Name="smooth"></RadzenCheckBox>
+                    <RadzenLabel Text="Smooth" For="smooth" Style="margin-right: 1rem;" />
+                    <RadzenCheckBox @bind-Value="@showDataLabels" Name="dataLabels"></RadzenCheckBox>
+                    <RadzenLabel Text="Show Data Labels" For="dataLabels" />
+                </RadzenCard>
+                <RadzenChart>
+                    @foreach (var item in AuthorMode)
+                    {
 
-        </ul>
+                        <RadzenLineSeries Smooth="@smooth" Data="@(item.Value)" CategoryProperty="Date" Title="@(item.Key)"
+                    ValueProperty="Commits">
+                            <RadzenMarkers MarkerType="MarkerType.Square" />
+                            <RadzenSeriesDataLabels Visible="@showDataLabels" />
+                        </RadzenLineSeries>
+                    }
 
-    }
+
+                    <RadzenCategoryAxis Formatter="@FormatAsMonth">
+                        <RadzenTicks>
+                            <Template>
+                                <text class="rz-tick-text"
+                                style="text-anchor: start; transform: translate(@(Math.Truncate(context.X))px, @(Math.Truncate(context.Y + 10))px) rotate(45deg)">@context.Value</text>
+                            </Template>
+                        </RadzenTicks>
+                    </RadzenCategoryAxis>
+                    <RadzenValueAxis Min="0" Max="@(maxValue + 5)" Step="5">
+                        <RadzenGridLines Visible="true" />
+                        <RadzenAxisTitle Text="Commits pr. day" />
+                    </RadzenValueAxis>
+
+                </RadzenChart>
+            </div>
+        </div>
+    </div>
 }
+<style>
+    .rz-chart svg {
+        overflow: visible;
+    }
+</style>
 
 @code {
-    private Dictionary<string,Dictionary<string,int>>? result;
-    private string? author,repo;
+    bool smooth = true;
+    bool showDataLabels = false;
+
+    bool noResponse = true;
+
+    int maxValue = 1;
+
+    private Dictionary<string, List<DataItem>>? AuthorMode;
+    private string? author, repo;
 
     protected override async Task OnInitializedAsync()
     {
-         try
-        {
+	try
+	{
         author = Index.authline;
         repo = Index.repoline;
         var jsonToConvert = await Http.GetStringAsync($"http://localhost:5243/author/{author}/{repo}");
-        result = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string,int>>>(jsonToConvert);
-        }
-            catch (AccessTokenNotAvailableException exception)
+        var result = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, int>>>(jsonToConvert);
+        AuthorMode = new();
+        if (result != null) { noResponse = false; }
+        foreach (var AuthorToFrequency in result)
         {
-            exception.Redirect();
+            List<DataItem> tempFrequency = new();
+            foreach (var Frequency in AuthorToFrequency.Value.Reverse())
+            {
+                tempFrequency.Add(new DataItem()
+                {
+                    Date = Frequency.Key,
+                    Commits = Frequency.Value
+                });
+
+            }
+            var tempMaxValue = tempFrequency.Select(c => c.Commits).Max();
+            maxValue = tempMaxValue > maxValue ? tempMaxValue : maxValue;
+            AuthorMode.Add(AuthorToFrequency.Key, tempFrequency);
+
+
         }
+	}catch (AccessTokenNotAvailableException exception)
+	{
+		exception.Redirect();
+	}
+
     }
 
+
+    // might be redundant.
+    string FormatAsMonth(object value)
+    {
+        if (value != null)
+        {
+            DateTime hello;
+            DateTime.TryParseExact(value.ToString(), "dd-MM-yyyy", null, System.Globalization.DateTimeStyles.None, out hello);
+            return hello.ToString("dd-MM-yyyy");
+        }
+
+        return string.Empty;
+    }
+
+
+    public class DataItem
+    {
+        public string? Date { get; set; }
+        public int Commits { get; set; }
+    }
 }
